@@ -1,7 +1,8 @@
-*decho.txt*Decho.vim						Jun 06, 2004
+*decho.txt* Vim Code Debugger			 		Jun 07, 2004
 
 Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	  (remove NOSPAM from Campbell's email to use)
+
 
 ==============================================================================
 1. Contents						*decho-contents*
@@ -15,10 +16,11 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	:DechoOn and :DechoOff (they call SaveWinPosn() and
 	RestoreWinPosn() to retain the cursor/screen position)
 
-==============================================================================
-2. Decho Manual							*decho*
 
-	The Decho plugin provides some inline debugging code.  It allows
+==============================================================================
+2. Decho Manual						*decho* *dfunc* *dret*
+
+	The Decho plugin supports the inlining of debugging code.  It allows
 	one to store debugging information along with scripts.
 
 	USAGE
@@ -27,6 +29,7 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	    call Decho("another string")
 	    call Decho("yet","another","string")
 	    call Dfunc("funcname(".whatever.")")
+	    call Dredir("cmd")
 	    call Dret("funcname".whatever)
 	    DechoOn
 	    DechoOff
@@ -51,10 +54,20 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	one for every open Dfunc().  The Dret() will check to insure that it
 	is apparently returning from the last function passed to Dfunc().
 
+       							*DechoOn* *DechoOff*
 	DechoOn and DechoOff are convenient commands for enabling and disabling
 	Decho, Dfunc, and Dret calls.  DechoOff makes any line containing one
 	of those three strings (Decho, Dfunc, Dret) into a comment, DechoOn
 	removes the leading '"' on such lines.
+
+						*decho-dhide* *decho-dshow*
+	The Dhide and Dshow commands allow one to toggle the visibility of
+	the DBG-buffer.  They use the g:decho_hide variable, plus make any
+	current DBG-buffer hidden or visible as indicated.
+
+							*decho-redir* *Dredir*
+	The Dredir() function allows one to redirect (see |redir|) a command's
+	output to the debugging buffer.
 
 	EXAMPLE
 
@@ -79,12 +92,6 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	    |decho test #3
 	    |testing }
 <
-						*decho-dhide* *decho-dshow*
-
-	The Dhide and Dshow commands allow one to toggle the visibility of
-	the DBG-buffer.  They use the g:decho_hide variable, plus make any
-	current DBG-buffer hidden or visible as indicated.
-
 
 ==============================================================================
 3. Decho Global Variables				*decho-var*
@@ -105,6 +112,17 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 ==============================================================================
 4. Decho History					*decho-history*
 
+  v10 Jul 27, 2004 : * if g:decho_bufenter exists, Decho will ignore BufEnter
+                       events
+		     * Decho uses keepjumps to avoid altering the jumplist
+		       table
+		     * appending to the DBG buffer with Decho does not make
+		       it modified
+		     * Dredir(cmd) may be used to redirect command output
+		       to the DBG buffer.  Example:  call Dredir("cmd")
+   v9 Jun 18, 2004 : * Dfunc/Decho/Dret now immune to lcd changes in the DBG
+   		       buffer name
+                     * DechoOn and DechoOff now accept ranges
    v8 Jun 06, 2004 : * Implemented Dhide and Dshow commands for toggling
                        the DBG-buffer's visibility (see |decho_dhide|)
    v7 Jun 02, 2004 : * made creation of	DBG window silent
@@ -122,5 +140,6 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 		       and having multiple DBG-windows
 
 
+==============================================================================
 vim:tw=78:ts=8:ft=help
 
