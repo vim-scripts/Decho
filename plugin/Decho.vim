@@ -1,7 +1,7 @@
 " Decho.vim:   Debugging support for VimL
-" Last Change: Jun 02, 2004
+" Last Change: Jun 07, 2004
 " Maintainer:  Charles E. Campbell, Jr. PhD <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Version:     7
+" Version:     8	ASTRO-ONLY
 "
 " Usage:
 "   Decho "a string"
@@ -34,6 +34,8 @@ endif
 com! -nargs=+ -complete=expression Decho call Decho(<args>)
 com! -nargs=0 DechoOn  call DechoOn()
 com! -nargs=0 DechoOff call DechoOff()
+com! -nargs=0 Dhide    call <SID>Dhide(1)
+com! -nargs=0 Dshow    call <SID>Dhide(0)
 
 " ---------------------------------------------------------------------
 " Decho: this splits the screen and writes messages to a small
@@ -176,4 +178,46 @@ endfun
 fun! DechoDepth(depth)
   let s:decho_depth= a:depth
 endfun
+
+" ---------------------------------------------------------------------
+" Dhide: (un)hide DBG buffer
+fun! <SID>Dhide(hide)
+
+  if !bufexists(g:decho_bufname)
+   " DBG-buffer doesn't exist, simply set g:decho_hide
+   let g:decho_hide= a:hide
+
+  elseif bufwinnr(g:decho_bufname) > 0
+   " DBG-buffer exists in a window, so its not currently hidden
+   if a:hide == 0
+   	" already visible!
+    let g:decho_hide= a:hide
+   else
+   	" need to hide window.  Goto window and make hidden
+	let curwin = winnr()
+	let dbgwin = bufwinnr(g:decho_bufname)
+    exe bufwinnr(g:decho_bufname)."wincmd W"
+	setlocal hidden
+	q
+	if dbgwin != curwin
+	 " return to previous window
+     exe bufwinnr(curwin)."wincmd W"
+	endif
+   endif
+
+  else
+   " The DBG-buffer window is currently hidden.
+   if a:hide == 0
+	let curwin= winnr()
+    exe "silent bot ".g:decho_winheight."new"
+    setlocal bh=wipe
+    exe "b ".bufnr(g:decho_bufname)
+    exe bufwinnr(curwin)."wincmd W"
+   else
+   	let g:decho_hide= a:hide
+   endif
+  endif
+  let g:decho_hide= a:hide
+endfun
+
 " ---------------------------------------------------------------------

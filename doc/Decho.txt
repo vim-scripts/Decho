@@ -1,4 +1,4 @@
-*decho.txt*Decho.vim						May 24, 2004
+*decho.txt*Decho.vim						Jun 06, 2004
 
 Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	  (remove NOSPAM from Campbell's email to use)
@@ -30,6 +30,8 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	    call Dret("funcname".whatever)
 	    DechoOn
 	    DechoOff
+	    Dhide
+	    Dshow
 <
 	The Decho call will put the string(s) passed to it into the debugging
 	window (by default, it will be called "DBG".  See |decho-var| for
@@ -57,26 +59,32 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	EXAMPLE
 
 	Consider the following file: >
-    	    let x="abc"
-    	    let y="def"
-    	    call Dfunc("testing(x=".x.")")
-    	    call Decho("decho test #1")
-    	    call Dfunc("Testing(y=".y.")")
-    	    call Decho("decho test #2")
-    	    call Dret("Testing")
-    	    call Decho("decho test #3")
-    	    call Dret("testing")
+	    let x="abc"
+	    let y="def"
+	    call Dfunc("testing(x=".x.")")
+	    call Decho("decho test #1")
+	    call Dfunc("Testing(y=".y.")")
+	    call Decho("decho test #2")
+	    call Dret("Testing")
+	    call Decho("decho test #3")
+	    call Dret("testing")
 <
 	Then sourcing with <Decho.vim> as a plugin (ie. already loaded) yields: >
 
-    	    testing(x=abc) {
-    	    |decho test #1
-    	    |Testing(y=def) {
-    	    ||decho test #2
-    	    ||Testing }
-    	    |decho test #3
-    	    |testing }
+	    testing(x=abc) {
+	    |decho test #1
+	    |Testing(y=def) {
+	    ||decho test #2
+	    ||Testing }
+	    |decho test #3
+	    |testing }
 <
+						*decho-dhide* *decho-dshow*
+
+	The Dhide and Dshow commands allow one to toggle the visibility of
+	the DBG-buffer.  They use the g:decho_hide variable, plus make any
+	current DBG-buffer hidden or visible as indicated.
+
 
 ==============================================================================
 3. Decho Global Variables				*decho-var*
@@ -97,6 +105,8 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 ==============================================================================
 4. Decho History					*decho-history*
 
+   v8 Jun 06, 2004 : * Implemented Dhide and Dshow commands for toggling
+                       the DBG-buffer's visibility (see |decho_dhide|)
    v7 Jun 02, 2004 : * made creation of	DBG window silent
 		     * g:decho_winheight implemented (see |decho_winheight|)
 		     * Dfunc/Decho/Dret	will always resize the DBG window to the
