@@ -1,7 +1,7 @@
 " Decho.vim:   Debugging support for VimL
-" Last Change: Apr 21, 2004
+" Last Change: Jun 02, 2004
 " Maintainer:  Charles E. Campbell, Jr. PhD <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Version:     6
+" Version:     7
 "
 " Usage:
 "   Decho "a string"
@@ -25,26 +25,28 @@ endif
 if !exists("s:decho_depth")
  let s:decho_depth  = 0
 endif
+if !exists("g:decho_winheight")
+ let g:decho_winheight= 5
+endif
 
 " ---------------------------------------------------------------------
 "  User Interface:
 com! -nargs=+ -complete=expression Decho call Decho(<args>)
-com! -nargs=0 DechoOn  g/\<D\(echo\|func\|ret\)\>/s/^"//
-com! -nargs=0 DechoOff g/\<D\(echo\|func\|ret\)\>/s/^/"/
+com! -nargs=0 DechoOn  call DechoOn()
+com! -nargs=0 DechoOff call DechoOff()
 
 " ---------------------------------------------------------------------
 " Decho: this splits the screen and writes messages to a small
-"        window (5 lines) on the bottom of the screen
+"        window (g:decho_winheight lines) on the bottom of the screen
 fun! Decho(...)
  
-  let curbuf= bufnr("%")
+  let curbuf         = bufnr("%")
 
   " As needed, create/switch-to the DBG buffer
   if !bufexists(g:decho_bufname)
    " if requested DBG-buffer doesn't exist, create a new one
    " at the bottom of the screen.
-   bot 5new
-   exe "file ".g:decho_bufname
+   exe "silent bot ".g:decho_winheight."new ".g:decho_bufname
 
   elseif bufwinnr(g:decho_bufname) > 0
    " if requested DBG-buffer exists in a window,
@@ -54,7 +56,8 @@ fun! Decho(...)
   else
    " user must have closed the DBG-buffer window.
    " create a new one at the bottom of the screen.
-   bot 5new
+   exe "silent bot ".g:decho_winheight."new"
+   setlocal bh=wipe
    exe "b ".bufnr(g:decho_bufname)
   endif
   set ft=Decho
@@ -96,7 +99,12 @@ fun! Decho(...)
   set nomod
 
   " Put cursor at bottom of DBG window, then return to original window
+  exe "res ".g:decho_winheight
   norm! G
+  if exists("g:decho_hide")
+   setlocal hidden
+   q
+  endif
   wincmd p
 endfun
 
@@ -146,4 +154,26 @@ fun! Dret(...)
   endif
 endfun
 
+" ---------------------------------------------------------------------
+" DechoOn:
+fun! DechoOn()
+  call SaveWinPosn()
+  g/\<D\(echo\|func\|ret\)\>/s/^"//
+  call RestoreWinPosn()
+endfun
+
+" ---------------------------------------------------------------------
+" DechoOff:
+fun! DechoOff()
+  call SaveWinPosn()
+  g/\<D\(echo\|func\|ret\)\>/s/^/"/
+  call RestoreWinPosn()
+endfun
+
+" ---------------------------------------------------------------------
+
+" DechoDepth: allow user to force depth value
+fun! DechoDepth(depth)
+  let s:decho_depth= a:depth
+endfun
 " ---------------------------------------------------------------------
