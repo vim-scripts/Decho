@@ -1,0 +1,84 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=120
+
+The Decho.vim plugin provides debugging messages in a separate window.  One puts
+
+    Decho "some message here"
+-or-
+    call Decho("another message")
+
+and Decho will split the screen with a five line debugging window on the bottom of the display where the messages will appear.  Allows one to inspect multiple error messages with the usual vim editing commands!
+
+To better support the debugging of scripts, Decho.vim also provides:
+
+    call Dfunc("YourFunctionName([arg1<".a:arg1."> arg2<".a:arg2.">])")
+    call Dret("YourFunctionName [returnvalue]")
+
+These two functions use Decho(), but also provide function tracking.  The .vim/syntax/Decho.vim provides special highlighting for the DBG buffer, too.  See the example below!
+
+One may redirect the output of arbitrary vim commands to the DBG buffer with the following function:
+
+    call Dredir("command")
+
+For example, consider
+
+	call Dredir("ls")
+
+Decho.vim makes it easy to turn debugging on and off in your scripts:
+
+    Turning Debugging On:
+        vim yourscript.vim
+        :DechoOn
+        :wq
+
+    Turning Debugging Off:
+        vim yourscript.vim
+        :DechoOff
+        :wq
+
+Some plugins use events such as WinEnter and others attempt to control window layout.  Decho supports these plugins with four methods to avoid disturbing the display:
+
+	DechoMsgOn  -- subsequent debugging output uses :echomsg
+	DechoRemOn  -- subsequent debugging output goes to a remote gvim which DechoRemOn will set up itself
+        DechoTabOn  -- subsequent debugging output goes to a separate debugging tab/window
+	DechoVarOn  -- subsequent debugging output goes to a variable (default value: g:dechovar)
+
+With any of these enabled, subsequent Dfunc, Dret, Decho, and Dredir output will be directed as indicated.
+
+ ---------------------------------------------------------------------
+Example:
+
+    LocalBrowse(dirname<.>) {
+    |NetGetcwd() {
+    ||return NetGetcwd /home/cec/.vim/VIMSCRIPT/ }
+    |dirname</home>
+    |Perform directory listing...
+    |bufnr(dirname</home>)=1
+    |dirnamenr=1 dirname</home> pre-exists
+    |changed directory to</home>
+    |buffer already exists, but needs listing (buf#1)
+    |Setting up local browser maps
+    |NetGetcwd() {
+    ||return NetGetcwd /home/cec/.vim/VIMSCRIPT/ }
+    |NetGetcwd() {
+    ||return NetGetcwd /home/cec/.vim/VIMSCRIPT/ }
+    |NetGetcwd() {
+    ||return NetGetcwd /home/cec/.vim/VIMSCRIPT/ }
+    |NetGetcwd() {
+    ||return NetGetcwd /home/cec/.vim/VIMSCRIPT/ }
+    |NetGetcwd() {
+    ||return NetGetcwd /home/cec/.vim/VIMSCRIPT/ }
+    |NetGetcwd() {
+    ||return NetGetcwd /home/cec/.vim/VIMSCRIPT/ }
+    |set up banner
+    |directories will be sorted by name
+    |LocalBrowseList(dirname</home>) {
+    |(elided for brevity)
+    ||return LocalBrowseList }
+    |SetSort() bannercnt=8 {
+    |(elided for brevity)
+    ||return SetSort }
+    |NetSort() {
+    ||return NetSort }
+    |return LocalBrowse : file</home> }
+
+(alpha/beta version available at http://mysite.verizon.net/astronaut/vim/index.html#DECHO)

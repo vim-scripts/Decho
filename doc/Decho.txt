@@ -1,0 +1,98 @@
+*decho.txt*	Decho.vim									Apr 20, 2004
+
+Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
+	  (remove NOSPAM from Campbell's email to use)
+
+==============================================================================
+1. Contents						*decho-contents*
+
+	1. Contents......................: |decho-contents|
+	2. Decho Manual..................: |decho|
+	3. Decho Global Variables........: |decho-var|
+	4. Decho History.................: |decho-history|
+
+==============================================================================
+2. Decho Manual							*decho*
+
+	The Decho plugin provides some inline debugging code.  It allows
+	one to store debugging information along with scripts.
+
+	USAGE
+>
+	    Decho "a string"
+	    call Decho("another string")
+	    call Decho("yet","another","string")
+	    call Dfunc("funcname(".whatever.")")
+	    call Dret("funcname".whatever)
+	    DechoOn
+	    DechoOff
+<
+	The Decho call will put the string(s) passed to it into the debugging
+	window (by default, it will be called "DBG".  See |decho-var| for
+	how to change that).  Control characters embedded in the string will
+	be made visible with a ^A - ^Z transformation.
+
+	The Dfunc() and Dret() calls act as a pair.  A function to be debugged
+	should call, at entry, >
+
+		Dfunc("funcname("."any arguments".")")
+<
+	It should also call, just prior to any return point, >
+
+		Dret("funcname"."any arguments")
+<
+	In between, calls to Decho will have their strings preceded by "|"s,
+	one for every open Dfunc().  The Dret() will check to insure that it
+	is apparently returning from the last function passed to Dfunc().
+
+	DechoOn and DechoOff are convenient commands for enabling and disabling
+	Decho, Dfunc, and Dret calls.  DechoOff makes any line containing one
+	of those three strings (Decho, Dfunc, Dret) into a comment, DechoOn
+	removes the leading '"' on such lines.
+
+	EXAMPLE
+
+	Consider the following file: >
+    	    let x="abc"
+    	    let y="def"
+    	    call Dfunc("testing(x=".x.")")
+    	    call Decho("decho test #1")
+    	    call Dfunc("Testing(y=".y.")")
+    	    call Decho("decho test #2")
+    	    call Dret("Testing")
+    	    call Decho("decho test #3")
+    	    call Dret("testing")
+<
+	Then sourcing with <Decho.vim> as a plugin (ie. already loaded) yields: >
+
+    	    testing(x=abc) {
+    	    |decho test #1
+    	    |Testing(y=def) {
+    	    ||decho test #2
+    	    ||Testing }
+    	    |decho test #3
+    	    |testing }
+<
+
+==============================================================================
+3. Decho Global Variables				*decho-var*
+
+   g:decho_bufname   : by default "DBG" .  Sets the name of the debugging buffer
+                       and window.
+
+
+==============================================================================
+4. Decho History					*decho-history*
+
+   v6 May 11, 2004 : * some bug fixes
+   v5 Apr 20, 2004 : * Dfunc() - for entering a function
+                     * Dret()  - for returning from a function
+   v4 Apr 20, 2004 :   Now makes control characters visible
+   v3 Aug 07, 2003 : * changed fixed "DBG" to g:decho_bufname to allow s/w to
+                       change the buffer name!
+                     * Now handles returning cursor to one of several windows
+                       and having multiple DBG-windows
+
+
+vim:tw=78:ts=8:ft=help
+
