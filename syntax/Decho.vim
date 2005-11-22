@@ -1,11 +1,8 @@
 " DrChip's debugger syntax file
 " Language   : DrChip's Dfunc/Decho/Dret output
 " Maintainer : Charles E. Campbell, Jr.
-" Last change: Apr 22, 2004
-" Version    : 2
-
-" allows usual C characters plus the : for C++
-set iskeyword=@,:,48-57,_,192-255
+" Last change: Sep 09, 2005
+" Version    : 3	NOT RELEASED
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -13,9 +10,9 @@ syn clear
 " Delimiters, strings, numbers
 syn match   dechoDelimiter			"[{}]$"
 syn match   dechoDelimiter			","
-syn region  dechoAngleBrkt			oneline	matchgroup=Green   start="\w<"lc=1	 matchgroup=Green end=">"	contains=dechoNotify,dechoAngleBrktInc,dechoString
-syn region  dechoAngleBrktInc	contained	oneline		 		 start="<"			 	 end=">"		contains=dechoNotify,dechoAngleBrktInc,dechoString
-syn region  dechoString				oneline	matchgroup=Blue start='"'	matchgroup=Blue end='"'			contains=dechoNotify
+syn region  dechoAngleBrkt			oneline	matchgroup=Green	start="\w<"lc=1	matchgroup=Green	end=">" contains=dechoNotify,dechoAngleBrktInc,dechoString
+syn region  dechoAngleBrktInc	contained	oneline				start="<"					end=">" contains=dechoNotify,dechoAngleBrktInc,dechoString
+syn region  dechoString				oneline	matchgroup=Blue	start='"'		matchgroup=Blue	end='"' contains=dechoNotify
 syn match   dechoNumber				"\<-\=[0-9]\+\>"
 syn match   dechoNumber				"\<-\=[0-9]\+\ze:"
 syn match   dechoNumber				"\<=-\=[0-9a-fA-F]\+\>"
@@ -28,16 +25,12 @@ syn match   dechoNotify				"!!!\|???"
 syn keyword	dechoWarning     			warning
 
 " Bars, Function names, Return
-syn match   dechoFunction contained		"\~\=[a-zA-Z_][a-zA-Z0-9_]*"
-syn match   dechoFunction contained		"[a-zA-Z_][a-zA-Z0-9_]*::\~\=[a-zA-Z_][a-zA-Z0-9_]*"
+syn match   dechoFunction contained		"\%([sS]:\)\=\h[a-zA-Z0-9_#]*"
 syn match   dechoBar				"^|\+"
-syn match   dechoStartFunc			"^|*\~\=[a-zA-Z_][a-zA-Z0-9_]*("						contains=dechoBar,dechoFunction,dechoDelimStart
-syn match   dechoStartFunc			"^|*[a-zA-Z_][a-zA-Z0-9_]*::\~\=[a-zA-Z_][a-zA-Z0-9_]*("		contains=dechoBar,dechoFunction,dechoDelimStart
-syn match   dechoStartFunc			"^|*[a-zA-Z_][a-zA-Z0-9_]*::\~\=operator\s*[-^|=+/<>[][<>\]]\=("	contains=dechoBar,dechoFunction,dechoDelimStart
-syn match   dechoStopFunc    			"^|\+return \~\=[a-zA-Z_][a-zA-Z0-9_]*"					contains=dechoBar,dechoFunction
-syn match   dechoStopFunc    			"^|\+return [a-zA-Z_][a-zA-Z0-9_]*::\~\=[a-zA-Z_][a-zA-Z0-9_]*"	contains=dechoBar,dechoFunction
+syn match   dechoStartFunc			"^|*\%([sS]:\)\=\h[a-zA-Z0-9_#]*("			contains=dechoBar,dechoFunction,dechoDelimStart
+syn match   dechoStopFunc    			"^|\+return \%([sS]:\)\=\h[a-zA-Z0-9_#]*"		contains=dechoBar,dechoFunction
 syn match   dechoComment     			"^[ \t]*#.*$"
-syn match   dechoMatrix				"^|[-+ 0-9.e]\+|$"								contains=dechoMatrixBar
+syn match   dechoMatrix				"^|[-+ 0-9.e]\+|$"					contains=dechoMatrixBar
 syn match   dechoMatrixBar contained	"|"
 
 " Problems

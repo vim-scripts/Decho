@@ -1,7 +1,11 @@
-*decho.txt* Vim Code Debugger			 		Jun 07, 2004
+*decho.txt* Vim Code Debugger				Apr 25, 2005
 
 Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	  (remove NOSPAM from Campbell's email to use)
+Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
+           The VIM LICENSE applies to Decho.vim and Decho.txt
+           (see |copyright|) except use "Decho" instead of "Vim"
+	   No warranty, express or implied.  Use At-Your-Own-Risk.
 
 
 ==============================================================================
@@ -29,10 +33,11 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	    call Decho("another string")
 	    call Decho("yet","another","string")
 	    call Dfunc("funcname(".whatever.")")
-	    call Dredir("cmd")
+	    call Dredir("cmd",...)
 	    call Dret("funcname".whatever)
-	    DechoOn
-	    DechoOff
+	    DechoOn    DechoOff
+	    DechoMsgOn DechoMsgOff
+	    DechoVarOn DechoVarOff
 	    Dhide
 	    Dshow
 <
@@ -67,7 +72,9 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 
 							*decho-redir* *Dredir*
 	The Dredir() function allows one to redirect (see |redir|) a command's
-	output to the debugging buffer.
+	output to the debugging buffer.  One must have the command to be
+	executed as the first argument; optionally, one may include additional
+	arguments which will be passed on to Decho() for output.
 
 	EXAMPLE
 
@@ -94,15 +101,35 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 <
 
 ==============================================================================
-3. Decho Global Variables				*decho-var*
+3. Decho Global Variables		*decho-variables* *decho_settings*
 
-							*decho_bufname*
-   g:decho_bufname    :	by default "DBG" .  Sets the name of the debugging buffer
-			and window.
+							*dechomsg*
+   g:dechomsg         : by default, 0.  If true, then debugging messages will
+                        use echomsg and can be seen using :messages.  See
+			|message-history| for this; currently the number of
+			remembered messages is 20.
+
+   g:decho_bufname    :	by default "DBG" .  Sets the name of the debugging
+   			buffer and window.
 							*decho_hide*
-   g:decho_hide       :	if set the DBG window will be hidden and will automatically
-			"q" each time it is used.  To see it, :e DBG .  Useful
-			for those applications that modify windows.
+   g:decho_hide       :	if set the DBG window will be hidden and will
+   			automatically "q" each time it is used.  To see it,
+			:e DBG .  Useful for those applications that
+			modify windows.
+
+					*dechobuf* *DechoVarOn* *DechoVarOff*
+   g:dechovar         : default value of g:dechovarname; when DechoVarOn is used,
+                        debugging messages get appended to the variable as
+			specified by g:dechovar_enabled.
+
+								*g:dechovarname*
+   g:dechovarname     : the name of the variable that DechoVar sends debugging
+  			output to
+
+							*dechovar_enabled*
+   g:dechovar_enabled : the name of the buffer holding debugging output.
+   			See |dechobuf|.
+
 							*decho_winheight*
    g:decho_winheight  :	by default equal to 5 lines.  Specifies the height
 			of the debugging window.  Every Dfunc/Decho/Dret
@@ -112,6 +139,22 @@ Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 ==============================================================================
 4. Decho History					*decho-history*
 
+  v12 Jan 14, 2005 : * DechoOn/Off now also turns on/off DechoVarOn/Off
+                     * Now includes a GetLatestVimScripts line for cecutil.vim
+      Apr 25, 2005   * Decho now does "runtime plugin/cecutil.vim" if that plugin
+                       hasn't been loaded yet.  It will also try the AsNeeded
+		       subdirectory if g:loaded_asneeded exists.
+      Jun 02, 2005   * with DechoMsgOn, Decho("doesn't") now works
+  v11 Aug 06, 2004 : * <q-args> now used instead of <args> for :Decho and :Dredir
+                       commands
+      Oct 28, 2004   * DechoMsgOn and DechoMsgOff installed; debugging messages
+                       will use the |echomsg| command.
+      Dec 27, 2004   * DechoVarOn and DechoVarOff installed; debugging
+      		       messages will be appended to the variable specified by
+		       g:dechovarname, which by default is "g:dechovar".
+		       These two commands toggle the variable
+		       "g:dechovar_enabled".
+      Dec 29, 2004   * Dredir() now accepts multiple arguments (cmd and output)
   v10 Jul 27, 2004 : * if g:decho_bufenter exists, Decho will ignore BufEnter
                        events
 		     * Decho uses keepjumps to avoid altering the jumplist
