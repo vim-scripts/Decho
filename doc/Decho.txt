@@ -1,8 +1,8 @@
-*decho.txt* Vim Code Debugger				Apr 25, 2005
+*decho.txt* Vim Code Debugger				Feb 15, 2006
 
 Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	  (remove NOSPAM from Campbell's email to use)
-Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
+Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
            The VIM LICENSE applies to Decho.vim and Decho.txt
            (see |copyright|) except use "Decho" instead of "Vim"
 	   No warranty, express or implied.  Use At-Your-Own-Risk.
@@ -25,19 +25,24 @@ Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
 2. Decho Manual						*decho* *dfunc* *dret*
 
 	The Decho plugin supports the inlining of debugging code.  It allows
-	one to store debugging information along with scripts.
+	one to store debugging information along with scripts.  Many of my]
+	own scripts can use this plugin (usually after a :DechoOn is issued).
 
 	USAGE
 >
-	    Decho "a string"
 	    call Decho("another string")
 	    call Decho("yet","another","string")
 	    call Dfunc("funcname(".whatever.")")
 	    call Dredir("cmd",...)
 	    call Dret("funcname".whatever)
+	    Decho "a string"
+	    DechoMsgOff
+	    DechoMsgOn
 	    DechoOn    DechoOff
-	    DechoMsgOn DechoMsgOff
-	    DechoVarOn DechoVarOff
+	    DechoRemOff
+	    DechoRemOn
+	    DechoVarOff
+	    DechoVarOn [varname]
 	    Dhide
 	    Dshow
 <
@@ -61,9 +66,13 @@ Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
 
        							*DechoOn* *DechoOff*
 	DechoOn and DechoOff are convenient commands for enabling and disabling
-	Decho, Dfunc, and Dret calls.  DechoOff makes any line containing one
-	of those three strings (Decho, Dfunc, Dret) into a comment, DechoOn
-	removes the leading '"' on such lines.
+	Decho, Dfunc, and Dret calls in a sourcefile.  DechoOff makes any line
+	containing one of the following strings: >
+		Decho	DechoMsgOn	DechoRemOn	DechoVarOn
+		Dfunc	DechoMsgOff	DechoRemOff	DechoVarOff
+		Dret
+<	into a comment line and DechoOn reactivates such commands by removing
+	the leading comment '"' character.
 
 						*decho-dhide* *decho-dshow*
 	The Dhide and Dshow commands allow one to toggle the visibility of
@@ -75,6 +84,44 @@ Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
 	output to the debugging buffer.  One must have the command to be
 	executed as the first argument; optionally, one may include additional
 	arguments which will be passed on to Decho() for output.
+
+							*g:decho_bufenter*
+	Some plugins use events such as BufEnter, WinEnter, and WinLeave.  If
+	you set this variable to 1, then such events will be ignored when and
+	only when Decho() and variants are used.  Setting this option avoids
+	such plugins from being triggered when recording debugging messages.
+	(examples: winmanager, taglist, multiselect, etc)
+
+						*DechoVarOn* *DechoVarOff*
+	Although debugging to a window is often convenient for the programmer,
+	unfortunately some vim applications are incompatible with such a
+	window (such as those which do window control themselves).  Using >
+		:DechoVarOn
+<	sends debugging output to be appended to a variable named in the
+	|g:dechovarname| variable (by default, its "g:dechovar").  To turn
+	this mode off (ie. revert to normal debugging-window use) use >
+		:DechoVarOff
+<
+						*DechoMsgOn* *DechoMsgOff*
+	This debugging method uses echomsg to display messages; they may be
+	seen with the |:messages|.  Vim usually will retain up to 20 such
+	messages (see |message-history|).  Use >
+		:DechoMsgOn
+<	to turn this method on and >
+		:DechoMsgOff
+<	to revert to normal debugging-window use.  This method helps avoid
+	interference with some plugins.
+
+						*DechoRemOn* *DechoRemOff*
+	This method will open (if necessary) and use a remote gvim with a
+	servername of DECHOREMOTE.  Debugging messages are appended to that
+	instance of gvim.  To have this command available, your vim must have
+	|clientserver| enabled and |gvim| must be executable. Use >
+		:DechoRemOn
+<	to turn this method on and >
+		:DechoRemOff
+<	to revert to normal debugging-window use.  This method helps avoid
+	interference with some plugins.
 
 	EXAMPLE
 
@@ -102,13 +149,20 @@ Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
 
 ==============================================================================
 3. Decho Global Variables		*decho-variables* *decho_settings*
+					*decho_options* *decho-var*
 
-							*dechomsg*
-   g:dechomsg         : by default, 0.  If true, then debugging messages will
-                        use echomsg and can be seen using :messages.  See
-			|message-history| for this; currently the number of
-			remembered messages is 20.
+								*g:dechomode*
+   g:dechomode        : =1 use separate small window at bottom (default)
+                        =2 debugging messages will use echomsg and can be seen
+			   by using :messages.  See |message-history| for more
+			   about this; currently, the maximum number of mess-
+			   ages remembered is 20.
+			=3 debugging messages get appended to the variable
+			   named by |g:dechovarname| (also see |g:dechovar|)
+			=4 debugging messages get appended to the gvim remote
+			   server named DECHOREMOTE.
 
+							*g:decho_bufname*
    g:decho_bufname    :	by default "DBG" .  Sets the name of the debugging
    			buffer and window.
 							*decho_hide*
@@ -116,19 +170,13 @@ Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
    			automatically "q" each time it is used.  To see it,
 			:e DBG .  Useful for those applications that
 			modify windows.
+							*g:dechovar*
+   g:dechovar         : default value of g:dechovarname (see |g:dechovarname|)
 
-					*dechobuf* *DechoVarOn* *DechoVarOff*
-   g:dechovar         : default value of g:dechovarname; when DechoVarOn is used,
-                        debugging messages get appended to the variable as
-			specified by g:dechovar_enabled.
-
-								*g:dechovarname*
-   g:dechovarname     : the name of the variable that DechoVar sends debugging
-  			output to
-
-							*dechovar_enabled*
-   g:dechovar_enabled : the name of the buffer holding debugging output.
-   			See |dechobuf|.
+							*g:dechovarname*
+   g:dechovarname     : when g:dechomode is 3, debugging output is appended to
+                        the variable named by this variable
+			(default: "g:dechovar"  - see |g:dechovar|)
 
 							*decho_winheight*
    g:decho_winheight  :	by default equal to 5 lines.  Specifies the height
@@ -139,6 +187,14 @@ Copyright: (c) 2004-2005 by Charles E. Campbell, Jr.	*decho-copyright*
 ==============================================================================
 4. Decho History					*decho-history*
 
+  v14 Jan 25, 2006 : * bugfix: with DechoVarOn, Decho would issue error
+                       messages when the string had single quotes (') in
+		       it
+		     * SaveWinPosn(0) used to avoid SWP stack use
+      Feb 15, 2006   * DechoRemOn and DechoRemOff now turn debugging on/off to
+		       a remote DECHOREMOTE gvim server.  Your vim must
+		       support clientserver and gvim must be executable.
+  v13 Jan 18, 2006 : * cecutil updated to use keepjumps
   v12 Jan 14, 2005 : * DechoOn/Off now also turns on/off DechoVarOn/Off
                      * Now includes a GetLatestVimScripts line for cecutil.vim
       Apr 25, 2005   * Decho now does "runtime plugin/cecutil.vim" if that plugin

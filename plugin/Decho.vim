@@ -1,7 +1,7 @@
 " Decho.vim:   Debugging support for VimL
 " Maintainer:  Charles E. Campbell, Jr. PhD <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Date:        Nov 22, 2005
-" Version:     12
+" Date:        Feb 15, 2006
+" Version:     14
 "
 " Usage: {{{1
 "   Decho "a string"
@@ -14,6 +14,8 @@
 "   DechoOff    : inserts a '"' into the first-column in lines containing Decho
 "   DechoMsgOn  : use echomsg instead of DBG buffer
 "   DechoMsgOff : turn debugging off
+"   DechoRemOn  : turn remote Decho messaging on
+"   DechoRemOff : turn remote Decho messaging off
 "   DechoVarOn [varname] : use variable to write debugging messages to
 "   DechoVarOff : turn debugging off
 "
@@ -25,7 +27,7 @@
 if exists("g:loaded_Decho") || &cp
  finish
 endif
-let g:loaded_Decho = "v12"
+let g:loaded_Decho = "v14"
 let s:keepcpo      = &cpo
 set cpo&vim
 
@@ -43,11 +45,12 @@ endif
 if !exists("g:decho_bufenter")
  let g:decho_bufenter= 0
 endif
-if !exists("g:dechomsg")
- let g:dechomsg= 0
-endif
-if !exists("g:dechovar_enabled")
- let g:dechovar_enabled= 0
+if !exists("g:dechomode")
+ let s:dechowin = 1
+ let s:dechomsg = 2
+ let s:dechovar = 3
+ let s:dechorem = 4
+ let g:dechomode= s:dechowin
 endif
 if !exists("g:dechovarname")
  let g:dechovarname = "g:dechovar"
@@ -61,8 +64,12 @@ com! -nargs=0 -range=% DechoOn				call DechoOn(<line1>,<line2>)
 com! -nargs=0 -range=% DechoOff				call DechoOff(<line1>,<line2>)
 com! -nargs=0 Dhide    						call s:Dhide(1)
 com! -nargs=0 Dshow    						call s:Dhide(0)
-com! -nargs=0 DechoMsgOn					let  g:dechomsg= 1
-com! -nargs=0 DechoMsgOff					let  g:dechomsg= 0
+com! -nargs=0 DechoMsgOn					let  g:dechomode= s:dechomsg
+com! -nargs=0 DechoMsgOff					let  g:dechomode= s:dechowin
+if has("clientserver") && executable("gvim")
+ com! -nargs=0 DechoRemOn					call s:DechoRemote(1)
+ com! -nargs=0 DechoRemOff					call s:DechoRemote(0)
+endif
 com! -nargs=? DechoVarOn					call s:DechoVarOn(<args>)
 com! -nargs=0 DechoVarOff					call s:DechoVarOff()
 
@@ -84,12 +91,13 @@ fun! Decho(...)
    endif
   endif
 
-  if !g:dechomsg && !g:dechovar_enabled
-   call SaveWinPosn()
+  if g:dechomode == s:dechowin
+   let swp   = SaveWinPosn(0)
    let curbuf= bufnr("%")
    if g:decho_bufenter
     let eikeep= &ei
-    set ei=BufEnter,WinEnter,WinLeave
+	let eakeep= &ea
+    set ei=BufEnter,WinEnter,WinLeave noea
    endif
  
    " As needed, create/switch-to the DBG buffer
@@ -151,14 +159,25 @@ fun! Decho(...)
    endif
   endwhile
 
-  if g:dechomsg
+"  echomsg "g:dechomode=".g:dechomode
+  if g:dechomode == s:dechomsg
+   " display message with echomsg
    exe "echomsg '".substitute(smsg,"'","'.\"'\".'","ge")."'"
-  elseif g:dechovar_enabled
+
+  elseif g:dechomode == s:dechovar
+   " "display" message by appending to variable named by g:dechovarname
+   let smsg= substitute(smsg,"'","''","ge")
    if exists(g:dechovarname)
-    exe "let ".g:dechovarname."= '".g:dechovarname."'.'\n".smsg."'"
+    exe "let ".g:dechovarname."= ".g:dechovarname.".'\n".smsg."'"
    else
     exe "let ".g:dechovarname."= '".smsg."'"
    endif
+
+  elseif g:dechomode == s:dechorem
+   " display message by appending it to remote DECHOREMOTE vim server
+   let smsg= substitute(smsg,"\<esc>","\<c-v>\<esc>","ge")
+   call remote_send("DECHOREMOTE",':set ma'."\<cr>".'Go'.smsg."\<esc>".':set noma nomod'."\<cr>")
+
   else
    " Write Message to DBG buffer
    setlocal ma
@@ -174,10 +193,13 @@ fun! Decho(...)
     q
    endif
    keepjumps wincmd p
-   call RestoreWinPosn()
+   if exists("swp")
+    call RestoreWinPosn(swp)
+   endif
  
    if g:decho_bufenter
     let &ei= eikeep
+	let &ea= eakeep
    endif
   endif
 endfun
@@ -233,25 +255,17 @@ endfun
 " ---------------------------------------------------------------------
 " DechoOn: {{{1
 fun! DechoOn(line1,line2)
-"  call Dfunc("DechoOn(line1=".a:line1." line2=".a:line2.")")
-
-  call SaveWinPosn()
-  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Var\)O\%(n\|ff\)\)\>/s/^"\+//'
-  call RestoreWinPosn()
-
-"  call Dret("DechoOn")
+  let swp=SaveWinPosn(0)
+  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Rem\|Var\)O\%(n\|ff\)\)\>/s/^"\+//'
+  call RestoreWinPosn(swp)
 endfun
 
 " ---------------------------------------------------------------------
 " DechoOff: {{{1
 fun! DechoOff(line1,line2)
-"  call Dfunc("DechoOff(line1=".a:line1." line2=".a:line2.")")
-
-  call SaveWinPosn()
+  let swp= SaveWinPosn(0)
   exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Var\)O\%(n\|ff\)\)\>/s/^[^"]/"&/'
-  call RestoreWinPosn()
-
-"  call Dret("DechoOff")
+  call RestoreWinPosn(swp)
 endfun
 
 " ---------------------------------------------------------------------
@@ -350,11 +364,54 @@ fun! Dredir(...)
   endwhile
 endfun
 
+ " ---------------------------------------------------------------------
+ " DechoRemote: supports sending debugging to a remote vim {{{1
+if has("clientserver") && executable("gvim")
+ fun! s:DechoRemote(mode)
+   if a:mode == 0
+    " turn remote debugging off
+    if g:dechomode == s:dechorem
+    	let g:dechomode= s:dechowin
+    endif
+ 
+   elseif a:mode == 1
+    " turn remote debugging on
+    if g:dechomode != s:dechorem
+ 	let g:dechomode= s:dechorem
+    endif
+    if serverlist() !~ '\<DECHOREMOTE\>'
+ "   " start up remote Decho server
+ "   call Decho("start up DECHOREMOTE server")
+     call system("gvim --servername DECHOREMOTE")
+     while 1
+      try
+       call remote_send("DECHOREMOTE",':file [Decho\ Remote\ Server]'."\<cr>")
+ 	  call remote_send("DECHOREMOTE",":put ='-----------------------------'\<cr>")
+ 	  call remote_send("DECHOREMOTE",":put ='Remote Decho Debugging Window'\<cr>")
+ 	  call remote_send("DECHOREMOTE",":put ='-----------------------------'\<cr>")
+ 	  call remote_send("DECHOREMOTE","1GddG")
+ 	  call remote_send("DECHOREMOTE",':silent set bt=nofile noma nomod nobl nonu noswf ch=1'."\<cr>")
+ 	  call remote_send("DECHOREMOTE",':'."\<cr>")
+ 	  break
+      catch /^Vim\%((\a\+)\)\=:E241/
+ 	  sleep 200m
+      endtry
+     endwhile
+    endif
+ 
+   else
+    echohl Warning | echomsg "DechoRemote(".a:mode.") not supported" | echohl None
+   endif
+ 
+ endfun
+endif
+
 " ---------------------------------------------------------------------
 "  DechoVarOn: turu debugging-to-a-variable on.  The variable is given {{{1
 "  by the user;   DechoVarOn [varname]
 fun! s:DechoVarOn(...)
-  let g:dechovar_enabled= 1
+  let g:dechomode= s:dechovar
+  
   if a:0 > 0
    if a:1 =~ '^g:'
     exe "let ".a:1.'= ""'
@@ -369,14 +426,12 @@ endfun
 " ---------------------------------------------------------------------
 " DechoVarOff: {{{1
 fun! s:DechoVarOff()
-"  call Dfunc("DechoVarOff()")
   if exists("g:dechovarname")
    if exists(g:dechovarname)
     exe "unlet ".g:dechovarname
    endif
   endif
-  let g:dechovar_enabled= 0
-"  call Dret("DechoVarOff")
+  let g:dechomode= s:dechowin
 endfun
 
 let &cpo= s:keepcpo
