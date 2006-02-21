@@ -1,4 +1,4 @@
-*decho.txt* Vim Code Debugger				Feb 15, 2006
+*decho.txt* Vim Code Debugger				Feb 21, 2006
 
 Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	  (remove NOSPAM from Campbell's email to use)
@@ -28,6 +28,27 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 	one to store debugging information along with scripts.  Many of my]
 	own scripts can use this plugin (usually after a :DechoOn is issued).
 
+	Decho, Dfunc, Dret, and Dredir have several ways to save their
+	debugging output: >
+		
+	 g:dechomode   Turn-On     Turn-Off     Debugging Output
+	 -----------   ----------  -----------  ---------------------------
+	       1       (default)                appended to separate window
+	       2       DechoMsgOn  DechoMsgOff  uses :echomsg
+	       3       DechoVarOn  DechoVarOff  appended to g:dechovar
+	       4       DechoRemOn  DechoRemOff  appended to a remote server
+	       5       DechoTabOn  DechoTabOff  appended to a tab
+<
+	Why so many methods?  Although the default method, that of writing
+	debugging output to a separate debugging window, is often quite
+	convenient, sometimes plugins want to control the entire window
+	display.  Hence a debugging window can cause trouble as it is
+	unaccounted for by the plugin.  The :echomsg output can be seen with
+	|:messages|, but only 20 such messages can be retained.  The remote
+	server debugging output keeps its "distance" from plugins, but uses
+	gvim to open a separate debugging instance.  So, pick whichever method
+	suits debugging your plugin best.
+
 	USAGE
 >
 	    call Decho("another string")
@@ -43,6 +64,8 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 	    DechoRemOn
 	    DechoVarOff
 	    DechoVarOn [varname]
+	    DechoTabOn
+	    DechoTabOff
 	    Dhide
 	    Dshow
 <
@@ -68,9 +91,11 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 	DechoOn and DechoOff are convenient commands for enabling and disabling
 	Decho, Dfunc, and Dret calls in a sourcefile.  DechoOff makes any line
 	containing one of the following strings: >
-		Decho	DechoMsgOn	DechoRemOn	DechoVarOn
-		Dfunc	DechoMsgOff	DechoRemOff	DechoVarOff
-		Dret
+
+    	    Decho        DechoRemOff  DechoTabOn   Dfunc                                 
+    	    DechoMsgOff  DechoRemOn   DechoVarOff  Dret                                  
+    	    DechoMsgOn   DechoTabOff  DechoVarOn
+
 <	into a comment line and DechoOn reactivates such commands by removing
 	the leading comment '"' character.
 
@@ -122,6 +147,17 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 		:DechoRemOff
 <	to revert to normal debugging-window use.  This method helps avoid
 	interference with some plugins.
+
+						*DechoTabOn* *DechoTabOff*
+	This method will open (if necessary) and use a debugging tab with
+	one window.  Debugging messages are appended to the debugging tab
+	(see |tabpage|).  One may use |gt| to switch between two tabs.  Use >
+		:DechoTabOn
+<	to turn this method on and >
+		:DechoTabOff
+<	to revert to normal debugging-window use.  The Decho and related
+	calls turn events off while writing to the debugging tab so as to
+	attempt to remain transparent with respect to normal event processing.
 
 	EXAMPLE
 
@@ -187,6 +223,7 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 ==============================================================================
 4. Decho History					*decho-history*
 
+  v15 Feb 21, 2006 : * DechoTab[On\Off] implemented
   v14 Jan 25, 2006 : * bugfix: with DechoVarOn, Decho would issue error
                        messages when the string had single quotes (') in
 		       it

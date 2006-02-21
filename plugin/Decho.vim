@@ -1,7 +1,7 @@
 " Decho.vim:   Debugging support for VimL
 " Maintainer:  Charles E. Campbell, Jr. PhD <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Date:        Feb 15, 2006
-" Version:     14
+" Date:        Feb 21, 2006
+" Version:     15
 "
 " Usage: {{{1
 "   Decho "a string"
@@ -18,6 +18,8 @@
 "   DechoRemOff : turn remote Decho messaging off
 "   DechoVarOn [varname] : use variable to write debugging messages to
 "   DechoVarOff : turn debugging off
+"   DechoTabOn  : turn debugging on (uses a separate tab)
+"   DechoTabOff : turn debugging off
 "
 " GetLatestVimScripts: 642 1 :AutoInstall: Decho.vim
 " GetLatestVimScripts: 1066 1 :AutoInstall: cecutil.vim
@@ -27,7 +29,7 @@
 if exists("g:loaded_Decho") || &cp
  finish
 endif
-let g:loaded_Decho = "v14"
+let g:loaded_Decho = "v15"
 let s:keepcpo      = &cpo
 set cpo&vim
 
@@ -50,6 +52,7 @@ if !exists("g:dechomode")
  let s:dechomsg = 2
  let s:dechovar = 3
  let s:dechorem = 4
+ let s:dechotab = 5
  let g:dechomode= s:dechowin
 endif
 if !exists("g:dechovarname")
@@ -72,6 +75,10 @@ if has("clientserver") && executable("gvim")
 endif
 com! -nargs=? DechoVarOn					call s:DechoVarOn(<args>)
 com! -nargs=0 DechoVarOff					call s:DechoVarOff()
+if v:version >= 700
+ com! -nargs=? DechoTabOn                   call s:DechoTab(1)
+ com! -nargs=? DechoTabOff                  call s:DechoTab(0)
+endif
 
 " ---------------------------------------------------------------------
 " Decho: the primary debugging function: splits the screen as necessary and {{{1
@@ -178,6 +185,18 @@ fun! Decho(...)
    let smsg= substitute(smsg,"\<esc>","\<c-v>\<esc>","ge")
    call remote_send("DECHOREMOTE",':set ma'."\<cr>".'Go'.smsg."\<esc>".':set noma nomod'."\<cr>")
 
+  elseif g:dechomode == s:dechotab
+   " display message by appending it to the debugging tab window
+   let eikeep= &ei
+   set ei=all
+   let dechotabcur = tabpagenr()
+   exe "tab ".g:dechotabnr
+   setlocal ma
+   call setline(line("$")+1,smsg)
+   setlocal noma nomod
+   exe "tab ".dechotabcur
+   let &ei= eikeep
+
   else
    " Write Message to DBG buffer
    setlocal ma
@@ -256,7 +275,7 @@ endfun
 " DechoOn: {{{1
 fun! DechoOn(line1,line2)
   let swp=SaveWinPosn(0)
-  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Rem\|Var\)O\%(n\|ff\)\)\>/s/^"\+//'
+  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Rem\|Tab\|Var\)O\%(n\|ff\)\)\>/s/^"\+//'
   call RestoreWinPosn(swp)
 endfun
 
@@ -264,7 +283,7 @@ endfun
 " DechoOff: {{{1
 fun! DechoOff(line1,line2)
   let swp= SaveWinPosn(0)
-  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Var\)O\%(n\|ff\)\)\>/s/^[^"]/"&/'
+  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Tab\|Var\)O\%(n\|ff\)\)\>/s/^[^"]/"&/'
   call RestoreWinPosn(swp)
 endfun
 
@@ -434,6 +453,39 @@ fun! s:DechoVarOff()
   let g:dechomode= s:dechowin
 endfun
 
+ " --------------------------------------------------------------------
+ " DechoTab: {{{1
+if v:version >= 700
+ fun! s:DechoTab(mode)
+ "  call Dfunc("DechoTab(mode=".a:mode.")")
+ 
+   if a:mode
+    let g:dechomode = s:dechotab
+    let dechotabcur = tabpagenr()
+    if !exists("g:dechotabnr")
+	 let eikeep= &ei
+	 set ei=all
+	 tabn
+	 file Decho\ Tab
+	 put ='---------'
+	 put ='Decho Tab'
+	 put ='---------'
+	 norm! 1GddG
+	 let g:dechotabnr= tabpagenr()
+	 setlocal bt=nofile noma nomod nobl noswf ch=1
+	 exe "tab ".dechotabcur
+	 let &ei= eikeep
+	endif
+   else
+    let g:dechomode= s:dechowin
+   endif
+ 
+ "  call Dret("DechoTab")
+ endfun
+endif
+
+" ---------------------------------------------------------------------
+"  End Plugin: {{{1
 let &cpo= s:keepcpo
 unlet s:keepcpo
 " ---------------------------------------------------------------------
