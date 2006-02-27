@@ -1,7 +1,7 @@
 " Decho.vim:   Debugging support for VimL
 " Maintainer:  Charles E. Campbell, Jr. PhD <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Date:        Feb 21, 2006
-" Version:     15
+" Date:        Feb 27, 2006
+" Version:     16
 "
 " Usage: {{{1
 "   Decho "a string"
@@ -29,7 +29,7 @@
 if exists("g:loaded_Decho") || &cp
  finish
 endif
-let g:loaded_Decho = "v15"
+let g:loaded_Decho = "v16"
 let s:keepcpo      = &cpo
 set cpo&vim
 
@@ -76,8 +76,8 @@ endif
 com! -nargs=? DechoVarOn					call s:DechoVarOn(<args>)
 com! -nargs=0 DechoVarOff					call s:DechoVarOff()
 if v:version >= 700
- com! -nargs=? DechoTabOn                   call s:DechoTab(1)
- com! -nargs=? DechoTabOff                  call s:DechoTab(0)
+ com! -nargs=? DechoTabOn                   set lz|call s:DechoTab(1)|set nolz
+ com! -nargs=? DechoTabOff                  set lz|call s:DechoTab(0)|set nolz
 endif
 
 " ---------------------------------------------------------------------
@@ -190,11 +190,11 @@ fun! Decho(...)
    let eikeep= &ei
    set ei=all
    let dechotabcur = tabpagenr()
-   exe "tab ".g:dechotabnr
+   exe "tabn ".g:dechotabnr
    setlocal ma
    call setline(line("$")+1,smsg)
    setlocal noma nomod
-   exe "tab ".dechotabcur
+   exe "tabn ".dechotabcur
    let &ei= eikeep
 
   else
@@ -465,7 +465,7 @@ if v:version >= 700
     if !exists("g:dechotabnr")
 	 let eikeep= &ei
 	 set ei=all
-	 tabn
+	 tabnew
 	 file Decho\ Tab
 	 put ='---------'
 	 put ='Decho Tab'
@@ -473,7 +473,7 @@ if v:version >= 700
 	 norm! 1GddG
 	 let g:dechotabnr= tabpagenr()
 	 setlocal bt=nofile noma nomod nobl noswf ch=1
-	 exe "tab ".dechotabcur
+	 exe "tabn ".dechotabcur
 	 let &ei= eikeep
 	endif
    else

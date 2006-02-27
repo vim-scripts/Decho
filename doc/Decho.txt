@@ -1,4 +1,4 @@
-*decho.txt* Vim Code Debugger				Feb 21, 2006
+*decho.txt* Vim Code Debugger				Feb 27, 2006
 
 Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	  (remove NOSPAM from Campbell's email to use)
@@ -223,6 +223,8 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 ==============================================================================
 4. Decho History					*decho-history*
 
+  v16 Feb 27, 2006 : * reflecting changes to tab commands:
+                       tab -> tabn, tabn -> tabnew
   v15 Feb 21, 2006 : * DechoTab[On\Off] implemented
   v14 Jan 25, 2006 : * bugfix: with DechoVarOn, Decho would issue error
                        messages when the string had single quotes (') in
