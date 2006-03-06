@@ -1,4 +1,4 @@
-*decho.txt* Vim Code Debugger				Feb 27, 2006
+*decho.txt* Vim Code Debugger				Mar 01, 2006
 
 Author:  Charles E. Campbell, Jr.  <drNchipO@ScampbellPfamilyA.bizM>
 	  (remove NOSPAM from Campbell's email to use)
@@ -223,6 +223,12 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 ==============================================================================
 4. Decho History					*decho-history*
 
+  v17 Mar 03, 2006 : * debugging filetype set to Decho for DechoTabOn and
+                       DechoRemOn and ei manipulated so that syntax
+		       highlighting works for the Decho Tab buffer.
+		     * bugfix: when a buffer was |'noma'|, DechoTabOn
+		       inherited that and complained about not being allowed
+		       to modify the buffer.
   v16 Feb 27, 2006 : * reflecting changes to tab commands:
                        tab -> tabn, tabn -> tabnew
   v15 Feb 21, 2006 : * DechoTab[On\Off] implemented

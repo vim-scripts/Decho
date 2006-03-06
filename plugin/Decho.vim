@@ -1,7 +1,7 @@
 " Decho.vim:   Debugging support for VimL
 " Maintainer:  Charles E. Campbell, Jr. PhD <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-" Date:        Feb 27, 2006
-" Version:     16
+" Date:        Mar 06, 2006
+" Version:     17
 "
 " Usage: {{{1
 "   Decho "a string"
@@ -29,7 +29,7 @@
 if exists("g:loaded_Decho") || &cp
  finish
 endif
-let g:loaded_Decho = "v16"
+let g:loaded_Decho = "v17"
 let s:keepcpo      = &cpo
 set cpo&vim
 
@@ -283,7 +283,7 @@ endfun
 " DechoOff: {{{1
 fun! DechoOff(line1,line2)
   let swp= SaveWinPosn(0)
-  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Tab\|Var\)O\%(n\|ff\)\)\>/s/^[^"]/"&/'
+  exe "keepjumps ".a:line1.",".a:line2.'g/\<D\%(echo\|func\|redir\|ret\|echo\%(Msg\|Rem\|Tab\|Var\)O\%(n\|ff\)\)\>/s/^[^"]/"&/'
   call RestoreWinPosn(swp)
 endfun
 
@@ -411,6 +411,8 @@ if has("clientserver") && executable("gvim")
  	  call remote_send("DECHOREMOTE","1GddG")
  	  call remote_send("DECHOREMOTE",':silent set bt=nofile noma nomod nobl nonu noswf ch=1'."\<cr>")
  	  call remote_send("DECHOREMOTE",':'."\<cr>")
+ 	  call remote_send("DECHOREMOTE",':set ft=Decho'."\<cr>")
+ 	  call remote_send("DECHOREMOTE",':syn on'."\<cr>")
  	  break
       catch /^Vim\%((\a\+)\)\=:E241/
  	  sleep 200m
@@ -467,11 +469,15 @@ if v:version >= 700
 	 set ei=all
 	 tabnew
 	 file Decho\ Tab
+	 setlocal ma
 	 put ='---------'
 	 put ='Decho Tab'
 	 put ='---------'
 	 norm! 1GddG
-	 let g:dechotabnr= tabpagenr()
+	 let g:dechotabnr = tabpagenr()
+	 let &ei          = ""
+	 set ft=Decho
+	 set ei=all
 	 setlocal bt=nofile noma nomod nobl noswf ch=1
 	 exe "tabn ".dechotabcur
 	 let &ei= eikeep

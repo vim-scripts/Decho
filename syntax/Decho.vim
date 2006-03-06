@@ -7,6 +7,10 @@
 " Remove any old syntax stuff hanging around
 syn clear
 
+" DechoTab support
+syn match	dechoTabTitleSep			"^---------$"
+syn match	dechoTabTitle			"^Decho Tab$"
+
 " Delimiters, strings, numbers
 syn match   dechoDelimiter			"[{}]$"
 syn match   dechoDelimiter			","
@@ -61,6 +65,8 @@ if !exists("did_drchip_decho_syntax")
   hi link dechoProblem		Error
   hi link dechoString		String
   hi link dechoWarning		Warning
+  hi link dechoTabTitle		PreProc
+  hi link dechoTabTitleSep	Delimiter
 
   " override
   hi link Function		Cyan
