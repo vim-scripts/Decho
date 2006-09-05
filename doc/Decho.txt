@@ -223,6 +223,9 @@ Copyright: (c) 2004-2006 by Charles E. Campbell, Jr.	*decho-copyright*
 ==============================================================================
 4. Decho History					*decho-history*
 
+  v18 Mar 13, 2006 : * now handles arguments which are lists
+                     * works around ignorecase setting
+		     * removed bt=nofile; using noswf instead
   v17 Mar 03, 2006 : * debugging filetype set to Decho for DechoTabOn and
                        DechoRemOn and ei manipulated so that syntax
 		       highlighting works for the Decho Tab buffer.
