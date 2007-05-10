@@ -2,7 +2,7 @@
 " Language   : DrChip's Dfunc/Decho/Dret output
 " Maintainer : Charles E. Campbell, Jr.
 " Last change: Sep 09, 2005
-" Version    : 3	NOT RELEASED
+" Version    : 3
 
 " Remove any old syntax stuff hanging around
 syn clear
